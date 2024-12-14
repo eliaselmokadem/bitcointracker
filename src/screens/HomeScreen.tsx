@@ -22,16 +22,7 @@ import { useTheme } from '../context/ThemeContext';
 import { API_ENDPOINTS, getData, postData } from '../utils/api';
 import { MaterialIcons } from '@expo/vector-icons';
 import { showNotification } from '../utils/notifications';
-
-interface BitcoinPrice {
-  id: string;
-  Date: string;
-  Price: number;
-  Open: number;
-  High: number;
-  ChangePercentFromLastMonth: number;
-  Volume: string;
-}
+import { BitcoinPrice } from '../types/BitcoinPrice';
 
 const FAVORITES_KEY = 'bitcoin_favorites';
 
@@ -103,6 +94,8 @@ export const HomeScreen = () => {
     }
     setShowDatePicker(false);
   };
+
+  
 
   const loadFavorites = async () => {
     try {
@@ -182,8 +175,13 @@ export const HomeScreen = () => {
       }
 
       if (data) {
-        setPrices(data);
-        setFilteredPrices(data);
+        const sortedData = [...data].sort((a, b) => {
+          const dateA = new Date(a.Date);
+          const dateB = new Date(b.Date);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setPrices(sortedData);
+        setFilteredPrices(sortedData);
       }
     } catch (error) {
       console.error('Error fetching Bitcoin prices:', error);
