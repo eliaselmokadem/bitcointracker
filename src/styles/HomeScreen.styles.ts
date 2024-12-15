@@ -147,7 +147,11 @@ export const styles = StyleSheet.create({
   },
   datePickerWrapper: {
     flex: 1,
+    maxWidth: '45%',
+  },
+  datePickerSeparator: {
     marginHorizontal: 8,
+    fontSize: 16,
   },
   dateLabel: {
     fontSize: 14,
@@ -259,6 +263,27 @@ export const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  messageText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
