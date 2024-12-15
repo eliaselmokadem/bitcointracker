@@ -13,6 +13,7 @@ import { useTheme } from "../context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { modalStyles } from "../styles/shared.styles";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
+import { useNotifications } from "../hooks/useNotifications";
 import { showNotification } from "../utils/notifications";
 import { BitcoinPrice } from "../types/BitcoinPrice";
 
@@ -22,6 +23,7 @@ export const FavoritesScreen = () => {
   const { isDarkMode } = useTheme();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
+  const { showNotification } = useNotifications();
   const [favorites, setFavorites] = useState<BitcoinPrice[]>([]);
   const [selectedPrice, setSelectedPrice] = useState<BitcoinPrice | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,7 +35,21 @@ export const FavoritesScreen = () => {
   useEffect(() => {
     if (isFocused) {
       console.log("FavoritesScreen - Screen focused, reloading favorites");
-      loadFavorites();
+      const checkClearedStatus = async () => {
+        try {
+          const wasCleared = await AsyncStorage.getItem('favorites_cleared');
+          if (wasCleared) {
+            await AsyncStorage.removeItem('favorites_cleared');
+            setFavorites([]);
+          } else {
+            loadFavorites();
+          }
+        } catch (error) {
+          console.error("Error checking cleared status:", error);
+          loadFavorites();
+        }
+      };
+      checkClearedStatus();
     }
   }, [isFocused]);
 
@@ -53,24 +69,22 @@ export const FavoritesScreen = () => {
 
   const removeFavorite = async (price: BitcoinPrice) => {
     try {
-      const newFavorites = favorites.filter((item) => item.Date !== price.Date);
-
-      // First update the state and storage
-      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      setFavorites(newFavorites);
-      setModalVisible(false);
-
-      // Then show the notification
-      console.log("Showing remove notification from FavoritesScreen");
-      await showNotification(
-        "Removed from Favorites ✨",
-        `Bitcoin price from ${price.Date} has been removed from your favorites`
+      const updatedFavorites = favorites.filter(
+        (fav) => fav.Date !== price.Date
       );
+      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+      setFavorites(updatedFavorites);
+      showNotification(
+        "Favorite Removed",
+        `Bitcoin price from ${price.Date} has been removed from your favorites.`
+      );
+      setSelectedPrice(null);
+      setModalVisible(false);
     } catch (error) {
       console.error("Error removing favorite:", error);
-      await showNotification(
-        "Error ❌",
-        "Failed to remove item from favorites. Please try again."
+      Alert.alert(
+        "Error",
+        "Failed to remove favorite. Please try again."
       );
     }
   };

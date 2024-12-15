@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, Dimensions, ActivityIndicator, Text, TouchableOpacity } from "react-native";
+import { View, FlatList, Dimensions, ActivityIndicator, Text, TouchableOpacity, Alert } from "react-native";
 import { styles } from "../styles/HomeScreen.styles";
 import { BitcoinPrice } from "../types/BitcoinPrice";
 import { HeaderButtons } from "../components/HeaderButtons";
@@ -9,13 +9,14 @@ import { AddPriceModal } from "../components/AddPriceModal";
 import { useTheme } from "../hooks/useTheme";
 import { API_ENDPOINTS, getData, postData } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { showNotification } from "../utils/notifications";
+import { useNotifications } from "../hooks/useNotifications";
 import { LineChart } from "react-native-chart-kit";
 
 const FAVORITES_KEY = "bitcoin_favorites";
 
 export const HomeScreen: React.FC = () => {
   const theme = useTheme();
+  const { showNotification } = useNotifications();
   const [allPrices, setAllPrices] = useState<BitcoinPrice[]>([]);
   const [filteredPrices, setFilteredPrices] = useState<BitcoinPrice[]>([]);
   const [favorites, setFavorites] = useState<BitcoinPrice[]>([]);
@@ -165,42 +166,31 @@ export const HomeScreen: React.FC = () => {
 
   const addToFavorites = async (price: BitcoinPrice) => {
     try {
-      const isFavorite = favorites.some((fav) => fav.Date === price.Date);
-      if (!isFavorite) {
-        const newFavorites = [...favorites, { ...price }];
-        await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-        setFavorites(newFavorites);
-        await showNotification(
-          "Added to Favorites! ",
-          `Bitcoin price from ${price.Date} has been added to your favorites`
-        );
-      }
+      const updatedFavorites = [...favorites, price];
+      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+      setFavorites(updatedFavorites);
+      showNotification(
+        "Added to Favorites",
+        `Bitcoin price from ${price.Date} has been added to your favorites.`
+      );
     } catch (error) {
       console.error("Error adding to favorites:", error);
-      await showNotification(
-        "Error ",
-        "Failed to add item to favorites. Please try again."
-      );
     }
   };
 
   const removeFromFavorites = async (price: BitcoinPrice) => {
     try {
-      const newFavorites = favorites.filter((fav) => fav.Date !== price.Date);
-      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(newFavorites));
-      setFavorites(newFavorites);
-      setSelectedPrice(null);
-      setShowDetailModal(false);
-      await showNotification(
-        "Removed from Favorites ",
-        `Bitcoin price from ${price.Date} has been removed from your favorites`
+      const updatedFavorites = favorites.filter(
+        (fav) => fav.Date !== price.Date
+      );
+      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(updatedFavorites));
+      setFavorites(updatedFavorites);
+      showNotification(
+        "Removed from Favorites",
+        `Bitcoin price from ${price.Date} has been removed from your favorites.`
       );
     } catch (error) {
       console.error("Error removing from favorites:", error);
-      await showNotification(
-        "Error ",
-        "Failed to remove item from favorites. Please try again."
-      );
     }
   };
 

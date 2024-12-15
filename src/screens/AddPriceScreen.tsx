@@ -5,10 +5,12 @@ import { API_ENDPOINTS, postData } from "../utils/api";
 import { BitcoinPrice } from "../types/BitcoinPrice";
 import DatePicker from "../components/DatePicker";
 import { useNavigation } from "@react-navigation/native";
+import { useNotifications } from "../hooks/useNotifications";
 
 export const AddPriceScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation();
+  const { showNotification } = useNotifications();
   const [priceData, setPriceData] = useState({
     Date: new Date().toLocaleDateString(),
     Price: "",
@@ -44,6 +46,11 @@ export const AddPriceScreen: React.FC = () => {
         throw new Error(response.error);
       }
 
+      showNotification(
+        "Price Added",
+        `New Bitcoin price for ${priceData.Date} has been added successfully.`
+      );
+
       // Reset form and navigate back
       setPriceData({
         Date: new Date().toLocaleDateString(),
@@ -55,8 +62,8 @@ export const AddPriceScreen: React.FC = () => {
       });
       navigation.goBack();
     } catch (error) {
-      console.error("Error adding new price:", error);
-      setError("Failed to add price. Please try again.");
+      console.error("Error adding price:", error);
+      setError(error instanceof Error ? error.message : "Failed to add price");
     } finally {
       setLoading(false);
     }
